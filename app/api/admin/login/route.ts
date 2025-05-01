@@ -1,26 +1,56 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { admins } from '@/lib/schema';
+import { eq } from 'drizzle-orm';
+import { compare } from 'bcryptjs';
+import { verifyAdmin } from '@/lib/auth';
 
 export async function POST(req: Request) {
-  const body = await req.json();
+  try {
+    const body = await req.json();
+    const { email, password } = body;
 
-  const email = process.env.ADMIN_EMAIL;
-  const password = process.env.ADMIN_PASSWORD;
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    }
 
-  if (body.email === email && body.password === password) {
-    // Create a response with success message
-    const response = NextResponse.json({ success: true });
+    // First try to authenticate with the database
+    let isAuthenticated = false;
 
-    // Set the cookie in the response
-    response.cookies.set('admin-auth', 'true', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7 // 1 week
-    });
+    try {
+      // Try to authenticate with the database
+      isAuthenticated = await verifyAdmin(email, password);
+    } catch (error) {
+      console.error('Database authentication error:', error);
 
-    return response;
-  } else {
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      // Fallback to environment variables if database authentication fails
+      const adminEmail = process.env.ADMIN_EMAIL;
+      const adminPassword = process.env.ADMIN_PASSWORD;
+
+      if (email === adminEmail && password === adminPassword) {
+        isAuthenticated = true;
+      }
+    }
+
+    if (isAuthenticated) {
+      // Create a response with success message
+      const response = NextResponse.json({ success: true });
+
+      // Set the cookie in the response
+      response.cookies.set('admin-auth', 'true', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24 * 7 // 1 week
+      });
+
+      return response;
+    } else {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -14,11 +14,19 @@ export enum TransactionType {
   RUPEES_TO_NAIRA = 'rupees-to-naira',
 }
 
+interface ReceiverInfo {
+  name: string;
+  accountNumber: string;
+  bankName: string;
+  phoneNumber: string;
+}
+
 interface CreateTransactionParams {
   senderId: string;
   amountSent: number;
   type: TransactionType;
   screenshot?: File;
+  receiverInfo: ReceiverInfo;
 }
 
 interface UpdateTransactionStatusParams {
@@ -56,7 +64,7 @@ export async function getCurrentExchangeRate(fromCurrency: string, toCurrency: s
 
 // Create a new transaction
 export async function createTransaction(params: CreateTransactionParams): Promise<any> {
-  const { senderId, amountSent, type, screenshot } = params;
+  const { senderId, amountSent, type, screenshot, receiverInfo } = params;
 
   try {
     // Generate unique transaction ID
@@ -93,6 +101,11 @@ export async function createTransaction(params: CreateTransactionParams): Promis
       toCurrency,
       status: 'awaiting_payment',
       paymentScreenshotUrl: screenshotUrl,
+      // Add receiver information
+      receiverName: receiverInfo.name,
+      receiverAccountNumber: receiverInfo.accountNumber,
+      receiverBankName: receiverInfo.bankName,
+      receiverPhoneNumber: receiverInfo.phoneNumber,
     }).returning();
 
     // If screenshot was uploaded, update transaction status

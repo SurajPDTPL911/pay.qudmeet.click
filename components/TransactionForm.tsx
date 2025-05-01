@@ -20,17 +20,21 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
   const [rupeeToNairaRate, setRupeeToNairaRate] = useState<ExchangeRate | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  
+
   const { register, handleSubmit, watch, formState: { errors }, reset } = useForm({
     defaultValues: {
       amount: '',
       type: 'naira-to-rupees', // Default to Naira to Rupees
+      receiverName: '',
+      receiverAccountNumber: '',
+      receiverBankName: '',
+      receiverPhoneNumber: '',
     }
   });
-  
+
   const watchType = watch('type');
   const watchAmount = watch('amount');
-  
+
   // Fetch exchange rates when component mounts
   useEffect(() => {
     async function fetchRates() {
@@ -38,16 +42,16 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
         // Fetch NGN to INR rate
         const ngnToInrResponse = await fetch('/api/exchange-rate?from=NGN&to=INR');
         const ngnToInrData = await ngnToInrResponse.json();
-        
+
         setNairaToRupeeRate({
           rate: ngnToInrData.rate,
           updatedAt: new Date().toISOString(),
         });
-        
+
         // Fetch INR to NGN rate
         const inrToNgnResponse = await fetch('/api/exchange-rate?from=INR&to=NGN');
         const inrToNgnData = await inrToNgnResponse.json();
-        
+
         setRupeeToNairaRate({
           rate: inrToNgnData.rate,
           updatedAt: new Date().toISOString(),
@@ -57,19 +61,19 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
         setError('Failed to fetch exchange rates. Please try again later.');
       }
     }
-    
+
     fetchRates();
   }, []);
-  
+
   // Calculate the amount to receive based on current input
   function calculateAmountToReceive(): number | null {
     if (!watchAmount) return null;
-    
+
     const amount = parseFloat(watchAmount);
     if (isNaN(amount)) return null;
-    
+
     const fee = 50; // 50 Rs flat fee
-    
+
     if (watchType === 'naira-to-rupees' && nairaToRupeeRate) {
       // Convert Naira to Rupees and subtract fee
       const convertedAmount = amount * nairaToRupeeRate.rate;
@@ -80,15 +84,15 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
       const feeInNaira = fee / rupeeToNairaRate.rate;
       return Math.max(0, convertedAmount - feeInNaira);
     }
-    
+
     return null;
   }
-  
+
   // Handle file selection
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] || null;
     setSelectedFile(file);
-    
+
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -99,38 +103,42 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
       setPreviewUrl(null);
     }
   }
-  
+
   // Form submission
   async function onSubmit(data: any) {
     setError(null);
     setIsLoading(true);
-    
+
     try {
       const formData = new FormData();
       formData.append('amount', data.amount);
       formData.append('type', data.type);
-      
+      formData.append('receiverName', data.receiverName);
+      formData.append('receiverAccountNumber', data.receiverAccountNumber);
+      formData.append('receiverBankName', data.receiverBankName);
+      formData.append('receiverPhoneNumber', data.receiverPhoneNumber);
+
       if (selectedFile) {
         formData.append('file', selectedFile);
       }
-      
+
       const response = await fetch('/api/transaction', {
         method: 'POST',
         body: formData,
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to create transaction');
       }
-      
+
       const result = await response.json();
-      
+
       // Reset form
       reset();
       setSelectedFile(null);
       setPreviewUrl(null);
-      
+
       // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess(result.transaction);
@@ -142,17 +150,17 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
       setIsLoading(false);
     }
   }
-  
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
       <h2 className="text-xl font-semibold mb-4">Start Currency Exchange</h2>
-      
+
       {error && (
         <div className="mb-4 p-3 bg-red-50 text-red-500 rounded-md text-sm">
           {error}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -191,7 +199,7 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
             </label>
           </div>
         </div>
-        
+
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Amount to Send
@@ -213,17 +221,17 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
             </p>
           )}
         </div>
-        
+
         <div className="mb-6 p-4 bg-gray-50 rounded-md">
           <div className="flex justify-between items-center text-sm mb-2">
             <span className="text-gray-500">Current Rate:</span>
             <span className="font-medium">
-              {watchType === 'naira-to-rupees' 
-                ? nairaToRupeeRate 
-                  ? `1 NGN = ${nairaToRupeeRate.rate.toFixed(2)} INR` 
+              {watchType === 'naira-to-rupees'
+                ? nairaToRupeeRate
+                  ? `1 NGN = ${nairaToRupeeRate.rate.toFixed(2)} INR`
                   : 'Loading...'
-                : rupeeToNairaRate 
-                  ? `1 INR = ${rupeeToNairaRate.rate.toFixed(2)} NGN` 
+                : rupeeToNairaRate
+                  ? `1 INR = ${rupeeToNairaRate.rate.toFixed(2)} NGN`
                   : 'Loading...'}
             </span>
           </div>
@@ -244,7 +252,83 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
             </div>
           </div>
         </div>
-        
+
+        {/* Receiver Information */}
+        <div className="mb-6 border border-gray-200 rounded-md p-4">
+          <h3 className="text-md font-medium mb-3">Receiver Information</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Receiver Name
+              </label>
+              <input
+                type="text"
+                className="block w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Full name of receiver"
+                {...register('receiverName', { required: true })}
+              />
+              {errors.receiverName && (
+                <p className="mt-1 text-sm text-red-500">
+                  Receiver name is required
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number
+              </label>
+              <input
+                type="text"
+                className="block w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Receiver's phone number"
+                {...register('receiverPhoneNumber', { required: true })}
+              />
+              {errors.receiverPhoneNumber && (
+                <p className="mt-1 text-sm text-red-500">
+                  Phone number is required
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Account Number
+              </label>
+              <input
+                type="text"
+                className="block w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Bank account number"
+                {...register('receiverAccountNumber', { required: true })}
+              />
+              {errors.receiverAccountNumber && (
+                <p className="mt-1 text-sm text-red-500">
+                  Account number is required
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Bank Name
+              </label>
+              <input
+                type="text"
+                className="block w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Name of the bank"
+                {...register('receiverBankName', { required: true })}
+              />
+              {errors.receiverBankName && (
+                <p className="mt-1 text-sm text-red-500">
+                  Bank name is required
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Payment Screenshot */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Upload Payment Screenshot (Optional)
@@ -265,18 +349,18 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
               </div>
             </div>
           </div>
-          
+
           {previewUrl && (
             <div className="mt-3">
-              <img 
-                src={previewUrl} 
-                alt="Preview" 
+              <img
+                src={previewUrl}
+                alt="Preview"
                 className="h-40 object-contain mx-auto border rounded-md"
               />
             </div>
           )}
         </div>
-        
+
         <button
           type="submit"
           disabled={isLoading}
@@ -290,19 +374,19 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
 }
 
 const ArrowRight = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="24" 
-    height="24" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
     className={className}
   >
     <path d="M5 12h14"></path>
     <path d="m12 5 7 7-7 7"></path>
   </svg>
-); 
+);

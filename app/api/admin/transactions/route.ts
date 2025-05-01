@@ -14,10 +14,24 @@ async function isAdmin() {
 }
 
 export async function GET() {
-  const admin = await isAdmin();
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const allTx = await db.select().from(transactions);
-  return NextResponse.json(allTx);
+  try {
+    const admin = await isAdmin();
+    if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // Get all transactions with most recent first
+    const allTx = await db
+      .select()
+      .from(transactions)
+      .orderBy(transactions.createdAt);
+
+    return NextResponse.json(allTx);
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    return NextResponse.json(
+      { error: 'Failed to load transactions. Please try again.' },
+      { status: 500 }
+    );
+  }
 }
 
 export async function PATCH(req: Request) {

@@ -115,12 +115,79 @@ export default function AdminDashboard() {
     }
   };
 
+  // State for payment account assignment
+  const [paymentAccounts, setPaymentAccounts] = useState<any[]>([]);
+  const [selectedPaymentAccount, setSelectedPaymentAccount] = useState<number | null>(null);
+  const [assigningPaymentAccount, setAssigningPaymentAccount] = useState(false);
+  const [transactionForPaymentAccount, setTransactionForPaymentAccount] = useState<string | null>(null);
+
+  // Fetch payment accounts
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchPaymentAccounts = async () => {
+        try {
+          const res = await fetch('/api/admin/payment-accounts');
+          if (res.ok) {
+            const data = await res.json();
+            setPaymentAccounts(data);
+          }
+        } catch (err) {
+          console.error('Error fetching payment accounts:', err);
+        }
+      };
+
+      fetchPaymentAccounts();
+    }
+  }, [isAuthenticated]);
+
+  // Function to assign payment account to transaction
+  const assignPaymentAccount = async (transactionId: string) => {
+    if (!selectedPaymentAccount) {
+      alert('Please select a payment account');
+      return;
+    }
+
+    setAssigningPaymentAccount(true);
+
+    try {
+      const res = await fetch('/api/admin/transactions/assign-payment-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          transactionId,
+          paymentAccountId: selectedPaymentAccount,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to assign payment account');
+      }
+
+      alert('Payment account assigned successfully');
+      setTransactionForPaymentAccount(null);
+      setSelectedPaymentAccount(null);
+    } catch (err) {
+      console.error('Error assigning payment account:', err);
+      alert('Failed to assign payment account. Please try again.');
+    } finally {
+      setAssigningPaymentAccount(false);
+    }
+  };
+
   // Function to get available actions based on current status
   const getAvailableActions = (tx: Transaction) => {
     switch (tx.status) {
       case 'awaiting_payment':
         return (
           <>
+            <button
+              onClick={() => setTransactionForPaymentAccount(tx.transactionId)}
+              className="px-2 py-1 bg-yellow-500 text-white rounded text-xs mb-1"
+            >
+              Assign Payment Account
+            </button>
             <button
               onClick={() => updateStatus(tx.id, 'payment_received')}
               className="px-2 py-1 bg-blue-500 text-white rounded text-xs"
@@ -209,17 +276,125 @@ export default function AdminDashboard() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-        >
-          Logout
-        </button>
+        <div className="flex space-x-4">
+          <Link
+            href="/admin/users"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            User Management
+          </Link>
+          <Link
+            href="/admin/exchange-rates"
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            Exchange Rates
+          </Link>
+          <Link
+            href="/admin/payment-accounts"
+            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            Payment Accounts
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+          >
+            Logout
+          </button>
+        </div>
       </div>
+
+      {/* Dashboard Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-lg font-semibold text-gray-700 mb-2">Total Transactions</h2>
+          <p className="text-3xl font-bold text-blue-600">{txs.length}</p>
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-lg font-semibold text-gray-700 mb-2">Pending Transactions</h2>
+          <p className="text-3xl font-bold text-yellow-600">
+            {txs.filter(tx => tx.status === 'awaiting_payment' || tx.status === 'payment_received').length}
+          </p>
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-lg font-semibold text-gray-700 mb-2">Completed Transactions</h2>
+          <p className="text-3xl font-bold text-green-600">
+            {txs.filter(tx => tx.status === 'completed').length}
+          </p>
+        </div>
+      </div>
+
+      <h2 className="text-xl font-semibold mb-4">Transaction Management</h2>
+
+      {/* Payment Account Assignment Modal */}
+      {transactionForPaymentAccount && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Assign Payment Account</h3>
+            <p className="mb-4 text-sm text-gray-600">
+              Select a payment account to assign to transaction {transactionForPaymentAccount}
+            </p>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Payment Account
+              </label>
+              <select
+                value={selectedPaymentAccount || ''}
+                onChange={(e) => setSelectedPaymentAccount(Number(e.target.value))}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select a payment account</option>
+                {paymentAccounts
+                  .filter(account => account.isActive)
+                  .map(account => (
+                    <option key={account.id} value={account.id}>
+                      {account.accountName} - {account.accountNumber} ({account.currency})
+                    </option>
+                  ))
+                }
+              </select>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setTransactionForPaymentAccount(null);
+                  setSelectedPaymentAccount(null);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => assignPaymentAccount(transactionForPaymentAccount)}
+                disabled={assigningPaymentAccount || !selectedPaymentAccount}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                {assigningPaymentAccount ? 'Assigning...' : 'Assign'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {txs.length === 0 ? (
         <div className="bg-white rounded-lg shadow-md p-6 text-center">
-          <p className="text-gray-500">No transactions found.</p>
+          <p className="text-gray-500 mb-4">No transactions found.</p>
+
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 text-sm text-blue-700">
+            <p className="font-bold">Getting Started</p>
+            <p className="mt-1">
+              If you're seeing database errors, please run the database migration first by clicking on the "Database Setup" link in the navigation bar.
+            </p>
+            <p className="mt-2">
+              After running the migration, you can log in with the default admin credentials:
+            </p>
+            <ul className="list-disc list-inside mt-1">
+              <li>Username: admin</li>
+              <li>Password: admin123</li>
+            </ul>
+          </div>
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -230,6 +405,7 @@ export default function AdminDashboard() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sender</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receiver</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -244,6 +420,17 @@ export default function AdminDashboard() {
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                     {tx.amountSent} {tx.fromCurrency} → {tx.amountReceived}{' '}
                     {tx.toCurrency}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    {tx.receiverName ? (
+                      <div>
+                        <div>{tx.receiverName}</div>
+                        <div className="text-xs text-gray-500">{tx.receiverBankName}</div>
+                        <div className="text-xs text-gray-500">{tx.receiverAccountNumber}</div>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">Not specified</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                     {new Date(tx.createdAt).toLocaleDateString()}

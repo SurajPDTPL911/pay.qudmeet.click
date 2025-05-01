@@ -50,8 +50,14 @@ export async function POST(req: Request) {
     const type = formData.get('type'); // "naira-to-rupees" or "rupees-to-naira"
     const file = formData.get('file') as File | null;
 
-    if (!amountSent || !type) {
-      return new NextResponse('Missing fields', { status: 400 });
+    // Get receiver information
+    const receiverName = formData.get('receiverName');
+    const receiverAccountNumber = formData.get('receiverAccountNumber');
+    const receiverBankName = formData.get('receiverBankName');
+    const receiverPhoneNumber = formData.get('receiverPhoneNumber');
+
+    if (!amountSent || !type || !receiverName || !receiverAccountNumber || !receiverBankName || !receiverPhoneNumber) {
+      return new NextResponse('Missing required fields', { status: 400 });
     }
 
     // Validate transaction type
@@ -71,6 +77,12 @@ export async function POST(req: Request) {
       amountSent: amount,
       type: type as TransactionType,
       screenshot: file || undefined,
+      receiverInfo: {
+        name: receiverName?.toString() || '',
+        accountNumber: receiverAccountNumber?.toString() || '',
+        bankName: receiverBankName?.toString() || '',
+        phoneNumber: receiverPhoneNumber?.toString() || '',
+      },
     });
 
     return NextResponse.json({

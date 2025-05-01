@@ -12,6 +12,7 @@ export enum NotificationType {
   TRANSACTION_FAILED = 'transaction_failed',
   RECEIPT_READY = 'receipt_ready',
   NEW_MESSAGE = 'new_message',
+  PAYMENT_ACCOUNT_ASSIGNED = 'payment_account_assigned',
 }
 
 interface NotificationData {
@@ -72,6 +73,7 @@ export async function createNotification(
           [NotificationType.RECEIPT_READY]: EmailType.RECEIPT_READY,
           [NotificationType.TRANSACTION_FAILED]: EmailType.TRANSACTION_COMPLETED,
           [NotificationType.NEW_MESSAGE]: EmailType.TRANSACTION_COMPLETED,
+          [NotificationType.PAYMENT_ACCOUNT_ASSIGNED]: EmailType.PAYMENT_RECEIVED,
         };
 
         const emailType = emailTypeMap[data.type];

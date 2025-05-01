@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, numeric, timestamp, pgEnum, text, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, numeric, timestamp, pgEnum, text, boolean, integer } from "drizzle-orm/pg-core";
 
 // Enum for transaction status
 export const statusEnum = pgEnum("status", ["awaiting_payment", "payment_received", "transfer_in_progress", "completed", "failed"]);
@@ -33,6 +33,13 @@ export const transactions = pgTable("transactions", {
   status: statusEnum("status").default("awaiting_payment"),
   receiptUrl: varchar("receipt_url", { length: 255 }),
   paymentScreenshotUrl: varchar("payment_screenshot_url", { length: 255 }),
+  // Receiver information
+  receiverName: varchar("receiver_name", { length: 255 }),
+  receiverAccountNumber: varchar("receiver_account_number", { length: 50 }),
+  receiverBankName: varchar("receiver_bank_name", { length: 255 }),
+  receiverPhoneNumber: varchar("receiver_phone_number", { length: 50 }),
+  // Payment account assigned by admin
+  paymentAccountId: integer("payment_account_id").references(() => paymentAccounts.id),
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
 });
@@ -55,13 +62,34 @@ export const admins = pgTable("admins", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Chat messages table
+// Chat messages table (for transaction-specific chats)
 export const chatMessages = pgTable("chat_messages", {
   id: serial("id").primaryKey(),
   transactionId: varchar("transaction_id", { length: 50 }).notNull(),
   senderId: varchar("sender_id", { length: 255 }).notNull(),
   content: text("content").notNull(),
   isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Group chat messages table (for general discussions)
+export const groupMessages = pgTable("group_messages", {
+  id: serial("id").primaryKey(),
+  senderId: varchar("sender_id", { length: 255 }).notNull(),
+  senderName: varchar("sender_name", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Payment accounts table (for admin to manage payment accounts)
+export const paymentAccounts = pgTable("payment_accounts", {
+  id: serial("id").primaryKey(),
+  accountType: varchar("account_type", { length: 50 }).notNull(), // bank, mobile, upi
+  currency: varchar("currency", { length: 10 }).notNull(), // NGN, INR
+  accountName: varchar("account_name", { length: 255 }).notNull(),
+  accountNumber: varchar("account_number", { length: 255 }).notNull(),
+  bankName: varchar("bank_name", { length: 255 }),
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

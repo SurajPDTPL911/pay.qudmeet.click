@@ -35,7 +35,12 @@ export default function AdminLoginPage() {
         router.push('/admin/dashboard');
       } else {
         const data = await res.json();
-        setError(data.error || 'Invalid credentials. Please try again.');
+
+        if (res.status === 500) {
+          setError('Database error. Please run the database migration first by visiting /admin/migrate');
+        } else {
+          setError(data.error || 'Invalid credentials. Please try again.');
+        }
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -126,10 +131,17 @@ export default function AdminLoginPage() {
           </div>
         </form>
 
-        <div className="text-center mt-4">
-          <Link href="/" className="text-sm text-blue-600 hover:text-blue-800">
-            Return to Home Page
-          </Link>
+        <div className="text-center mt-4 space-y-2">
+          <div>
+            <Link href="/admin/migrate" className="text-sm text-blue-600 hover:text-blue-800">
+              Database Setup
+            </Link>
+          </div>
+          <div>
+            <Link href="/" className="text-sm text-blue-600 hover:text-blue-800">
+              Return to Home Page
+            </Link>
+          </div>
         </div>
       </div>
     </div>
