@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Pay.Qudmeet
 
 A secure currency exchange platform for students, facilitating transactions between Nigerian Naira and Indian Rupees.
@@ -22,6 +23,9 @@ A secure currency exchange platform for students, facilitating transactions betw
 - **AI Assistant**: Google Gemini AI
 - **Real-time Chat**: Socket.io
 - **Email Notifications**: Resend
+=======
+
+>>>>>>> f587c66efedecb00cccbad04065dce2f02606002
 
 ## Getting Started
 

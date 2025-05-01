@@ -1,6 +1,9 @@
 import { db } from './db';
 import { notifications, users } from './schema';
-import { getIO, getUserChannelName, SocketEvents } from './socket.js';
+// Import Socket.io implementation based on environment
+import { getIO, getUserChannelName, SocketEvents } from process.env.VERCEL
+  ? './socketServerless.js'
+  : './socket.js';
 import { sendEmail, EmailType } from './email';
 import { eq, desc } from 'drizzle-orm';
 

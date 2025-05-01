@@ -1,8 +1,27 @@
 import { Resend } from 'resend';
 
-// Initialize Resend with API key
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend with API key if available
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'notifications@pay.qudmeet.click';
+
+// Mock email service for development when Resend API key is not available
+const mockEmailService = {
+  emails: {
+    send: async (options: any) => {
+      console.log('MOCK EMAIL SENT:', {
+        from: options.from,
+        to: options.to,
+        subject: options.subject,
+        text: options.text?.substring(0, 100) + '...',
+      });
+      return {
+        data: { id: 'mock-email-' + Date.now() },
+        error: null
+      };
+    }
+  }
+};
 
 export enum EmailType {
   PAYMENT_RECEIVED = 'payment_received',
@@ -51,30 +70,33 @@ const templates = {
 export async function sendEmail(type: EmailType, data: any, to: string): Promise<boolean> {
   try {
     const template = templates[type](data);
-    
+
     const emailData: EmailData = {
       to,
       subject: template.subject,
       text: template.text,
       html: template.html,
     };
-    
-    const { data: resData, error } = await resend.emails.send({
+
+    // Use Resend if API key is available, otherwise use mock service
+    const emailService = resend || mockEmailService;
+
+    const { data: resData, error } = await emailService.emails.send({
       from: FROM_EMAIL,
       to: emailData.to,
       subject: emailData.subject,
       text: emailData.text,
       html: emailData.html,
     });
-    
+
     if (error) {
       console.error('Error sending email:', error);
       return false;
     }
-    
+
     return true;
   } catch (error) {
     console.error('Error sending email:', error);
     return false;
   }
-} 
+}

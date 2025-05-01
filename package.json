@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "NODE_ENV=production node server.mjs",
     "start:windows": "set NODE_ENV=production && node server.mjs",
+    "vercel-build": "next build",
     "lint": "next lint"
   },
   "dependencies": {
@@ -26,7 +27,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.1",
-    "resend": "^1.0.0",
+    "resend": "^2.0.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "zod": "^3.24.3"
