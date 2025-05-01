@@ -1,12 +1,13 @@
 import { compare } from 'bcryptjs';
 import { db } from './db';
 import { admins } from './schema';
+import { eq } from 'drizzle-orm';
 
 export async function signInAdmin(username: string, password: string) {
   const [admin] = await db
     .select()
     .from(admins)
-    .where(admins.username.eq(username))
+    .where(eq(admins.username, username))
     .execute();
   if (!admin) return false;
   const valid = await compare(password, admin.passwordHash);
