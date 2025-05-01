@@ -1,6 +1,5 @@
 // app/dashboard/page.tsx
-import { auth } from '@clerk/nextjs/server';
-import { currentUser } from '@clerk/nextjs';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import TransactionForm from '@/components/TransactionForm';
 import TransactionList from '@/components/TransactionList';
 
@@ -21,7 +20,7 @@ export default async function DashboardPage() {
         <div className="lg:col-span-1">
           <TransactionForm />
         </div>
-        
+
         <div className="lg:col-span-2">
           <TransactionList />
         </div>

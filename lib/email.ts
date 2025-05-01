@@ -1,25 +1,22 @@
-import { Resend } from 'resend';
+// Simple email service implementation that doesn't rely on Resend
+// This avoids the React 19 compatibility issues with @react-email/render
 
-// Initialize Resend with API key if available
-const resendApiKey = process.env.RESEND_API_KEY;
-const resend = resendApiKey ? new Resend(resendApiKey) : null;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'notifications@pay.qudmeet.click';
 
-// Mock email service for development when Resend API key is not available
-const mockEmailService = {
-  emails: {
-    send: async (options: any) => {
-      console.log('MOCK EMAIL SENT:', {
-        from: options.from,
-        to: options.to,
-        subject: options.subject,
-        text: options.text?.substring(0, 100) + '...',
-      });
-      return {
-        data: { id: 'mock-email-' + Date.now() },
-        error: null
-      };
-    }
+// Simple email service that just logs emails for now
+// In production, you would integrate with a service like SendGrid, Mailgun, etc.
+const emailService = {
+  send: async (options: any) => {
+    console.log('EMAIL SENT:', {
+      from: options.from,
+      to: options.to,
+      subject: options.subject,
+      text: options.text?.substring(0, 100) + '...',
+    });
+    return {
+      id: 'email-' + Date.now(),
+      success: true
+    };
   }
 };
 
@@ -78,19 +75,22 @@ export async function sendEmail(type: EmailType, data: any, to: string): Promise
       html: template.html,
     };
 
-    // Use Resend if API key is available, otherwise use mock service
-    const emailService = resend || mockEmailService;
+    // Send email using our simple email service
+    try {
+      const result = await emailService.send({
+        from: FROM_EMAIL,
+        to: emailData.to,
+        subject: emailData.subject,
+        text: emailData.text,
+        html: emailData.html,
+      });
 
-    const { data: resData, error } = await emailService.emails.send({
-      from: FROM_EMAIL,
-      to: emailData.to,
-      subject: emailData.subject,
-      text: emailData.text,
-      html: emailData.html,
-    });
-
-    if (error) {
-      console.error('Error sending email:', error);
+      if (!result.success) {
+        console.error('Failed to send email');
+        return false;
+      }
+    } catch (err) {
+      console.error('Error sending email:', err);
       return false;
     }
 

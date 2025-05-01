@@ -6,9 +6,10 @@ const nextConfig = {
   env: {
     DATABASE_URL: process.env.DATABASE_URL,
   },
-  // Allow importing .js files from .ts files
+  // Experimental features
   experimental: {
-    esmExternals: 'loose',
+    // Note: esmExternals is not recommended but needed for compatibility
+    // with certain packages
   },
   // Webpack configuration to handle Socket.io
   webpack: (config, { isServer }) => {
