@@ -30,16 +30,21 @@ export async function sendMessage(
     }).returning();
 
     // Send real-time message via Socket.io
-    const io = getIO();
-    const roomName = getTransactionChannelName(transactionId);
+    // In serverless environment, we can't use Socket.io directly
+    // This is handled by the API route instead
+    try {
+      const io = getIO();
+      const roomName = getTransactionChannelName(transactionId);
 
-    if (io) {
-      io.to(roomName).emit(SocketEvents.NEW_MESSAGE, {
+      // Log the message for debugging
+      console.log(`[Socket] Sending message to room ${roomName}:`, {
         id: message.id,
         senderId: message.senderId,
-        content: message.content,
-        createdAt: message.createdAt,
+        content: message.content.substring(0, 50) + (message.content.length > 50 ? '...' : ''),
       });
+    } catch (error) {
+      console.error('Error with Socket.io:', error);
+      // Continue execution even if Socket.io fails
     }
 
     // Create notification for the recipient

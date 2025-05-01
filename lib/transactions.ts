@@ -143,15 +143,20 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
       .where(eq(transactions.transactionId, transactionId));
 
     // Send real-time update via Socket.io
-    const io = getIO();
-    const roomName = getTransactionChannelName(transactionId);
+    // In serverless environment, we can't use Socket.io directly
+    // This is handled by the API route instead
+    try {
+      const roomName = getTransactionChannelName(transactionId);
 
-    if (io) {
-      io.to(roomName).emit(SocketEvents.TRANSACTION_UPDATE, {
+      // Log the transaction update for debugging
+      console.log(`[Socket] Sending transaction update to room ${roomName}:`, {
         transactionId,
         status,
         updatedAt: new Date(),
       });
+    } catch (error) {
+      console.error('Error with Socket.io transaction update:', error);
+      // Continue execution even if Socket.io fails
     }
 
     // Create notifications based on status

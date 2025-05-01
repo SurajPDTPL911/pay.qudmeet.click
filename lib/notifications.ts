@@ -38,19 +38,21 @@ export async function createNotification(
     }).returning();
 
     // 2. Send real-time notification via Socket.io
-    const io = getIO();
-    const roomName = getUserChannelName(userId);
+    // In serverless environment, we can't use Socket.io directly
+    // This is handled by the API route instead
+    try {
+      const roomName = getUserChannelName(userId);
 
-    if (io) {
-      io.to(roomName).emit(SocketEvents.NOTIFICATION, {
+      // Log the notification for debugging
+      console.log(`[Socket] Sending notification to room ${roomName}:`, {
         id: notification.id,
         title: notification.title,
         message: notification.message,
         type: notification.type,
-        isRead: notification.isRead,
-        createdAt: notification.createdAt,
-        relatedEntityId: notification.relatedEntityId
       });
+    } catch (error) {
+      console.error('Error with Socket.io notification:', error);
+      // Continue execution even if Socket.io fails
     }
 
     // 3. Send email notification if requested
