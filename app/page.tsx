@@ -2,8 +2,21 @@
 
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { SignInButton, SignUpButton, useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const { isSignedIn } = useUser();
+  const router = useRouter();
+
+  // Function to handle the start exchanging button click
+  const handleStartExchange = () => {
+    if (isSignedIn) {
+      router.push('/dashboard');
+    }
+    // If not signed in, the SignInButton will handle the sign-in flow
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -19,19 +32,41 @@ export default function Home() {
                 Naira ⇄ Rupees, eliminating scams and delays.
               </p>
               <div className="space-x-4">
-                <Link
-                  href="/dashboard"
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm bg-white text-blue-700 hover:bg-blue-50"
-                >
-                  Start Exchanging
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-                <Link
-                  href="/auth/sign-up"
-                  className="inline-flex items-center px-6 py-3 border border-blue-300 text-base font-medium rounded-md text-white hover:bg-blue-700"
-                >
-                  Sign Up Now
-                </Link>
+                {isSignedIn ? (
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm bg-white text-blue-700 hover:bg-blue-50"
+                  >
+                    Start Exchanging
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                ) : (
+                  <SignInButton mode="modal">
+                    <button
+                      onClick={handleStartExchange}
+                      className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm bg-white text-blue-700 hover:bg-blue-50"
+                    >
+                      Start Exchanging
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </button>
+                  </SignInButton>
+                )}
+                {isSignedIn ? (
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex items-center px-6 py-3 border border-blue-300 text-base font-medium rounded-md text-white hover:bg-blue-700"
+                  >
+                    Go to Dashboard
+                  </Link>
+                ) : (
+                  <SignUpButton mode="modal">
+                    <button
+                      className="inline-flex items-center px-6 py-3 border border-blue-300 text-base font-medium rounded-md text-white hover:bg-blue-700"
+                    >
+                      Sign Up Now
+                    </button>
+                  </SignUpButton>
+                )}
               </div>
             </div>
             <div className="md:w-2/5">
