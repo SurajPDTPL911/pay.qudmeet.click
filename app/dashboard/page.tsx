@@ -4,7 +4,8 @@ import TransactionForm from '@/components/TransactionForm';
 import TransactionList from '@/components/TransactionList';
 
 export default async function DashboardPage() {
-  const { userId } = auth();
+  // In Next.js 15, auth() returns a Promise
+  const { userId } = await auth();
   const user = await currentUser();
 
   return (

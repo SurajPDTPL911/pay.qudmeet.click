@@ -4,7 +4,8 @@ import { getUserNotifications, markNotificationAsRead } from '@/lib/notification
 
 // Get all notifications for current user
 export async function GET(req: Request) {
-  const { userId } = auth();
+  // In Next.js 15, auth() returns a Promise
+  const { userId } = await auth();
   if (!userId) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
@@ -20,7 +21,8 @@ export async function GET(req: Request) {
 
 // Mark notification as read
 export async function PATCH(req: Request) {
-  const { userId } = auth();
+  // In Next.js 15, auth() returns a Promise
+  const { userId } = await auth();
   if (!userId) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
@@ -43,4 +45,4 @@ export async function PATCH(req: Request) {
     console.error('Error marking notification as read:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
-} 
+}

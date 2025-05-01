@@ -4,7 +4,8 @@ import { createTransaction, getTransactionById, getUserTransactions, Transaction
 
 // Get all transactions for the current user
 export async function GET(req: Request) {
-  const { userId } = auth();
+  // In Next.js 15, auth() returns a Promise
+  const { userId } = await auth();
   if (!userId) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
@@ -16,15 +17,15 @@ export async function GET(req: Request) {
     // If transaction ID is provided, return that specific transaction
     if (transactionId) {
       const transaction = await getTransactionById(transactionId);
-      
+
       // Make sure the user has access to this transaction
       if (!transaction || (transaction.senderId !== userId && transaction.receiverId !== userId)) {
         return new NextResponse('Not found', { status: 404 });
       }
-      
+
       return NextResponse.json(transaction);
     }
-    
+
     // Otherwise return all transactions for the user
     const transactions = await getUserTransactions(userId);
     return NextResponse.json(transactions);
@@ -36,7 +37,8 @@ export async function GET(req: Request) {
 
 // Create a new transaction
 export async function POST(req: Request) {
-  const { userId } = auth();
+  // In Next.js 15, auth() returns a Promise
+  const { userId } = await auth();
   if (!userId) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
@@ -71,9 +73,9 @@ export async function POST(req: Request) {
       screenshot: file || undefined,
     });
 
-    return NextResponse.json({ 
-      message: 'Transaction created', 
-      transaction 
+    return NextResponse.json({
+      message: 'Transaction created',
+      transaction
     });
   } catch (error) {
     console.error('Error creating transaction:', error);
@@ -83,7 +85,8 @@ export async function POST(req: Request) {
 
 // Update transaction status (admin only)
 export async function PATCH(req: Request) {
-  const { userId } = auth();
+  // In Next.js 15, auth() returns a Promise
+  const { userId } = await auth();
   if (!userId) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
@@ -91,35 +94,35 @@ export async function PATCH(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const transactionId = searchParams.get('id');
-    
+
     if (!transactionId) {
       return new NextResponse('Transaction ID is required', { status: 400 });
     }
-    
+
     const body = await req.json();
     const { status } = body;
-    
+
     if (!status) {
       return new NextResponse('Status is required', { status: 400 });
     }
-    
+
     // Validate status
     const validStatuses = ['awaiting_payment', 'payment_received', 'transfer_in_progress', 'completed', 'failed'];
     if (!validStatuses.includes(status)) {
       return new NextResponse('Invalid status', { status: 400 });
     }
-    
+
     // Update transaction status
     const result = await updateTransactionStatus({
       transactionId,
       status: status as any,
       adminId: userId,
     });
-    
+
     if (!result) {
       return new NextResponse('Failed to update status', { status: 400 });
     }
-    
+
     return NextResponse.json({ message: 'Status updated' });
   } catch (error) {
     console.error('Error updating transaction status:', error);

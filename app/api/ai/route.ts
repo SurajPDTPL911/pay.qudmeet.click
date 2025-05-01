@@ -3,7 +3,8 @@ import { auth } from '@clerk/nextjs/server';
 import { getAIResponse, handleCommonQuestion } from '@/lib/ai';
 
 export async function POST(req: Request) {
-  const { userId } = auth();
+  // In Next.js 15, auth() returns a Promise
+  const { userId } = await auth();
   if (!userId) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
@@ -18,24 +19,24 @@ export async function POST(req: Request) {
 
     // First check if it's a common question we can answer directly
     const commonAnswer = await handleCommonQuestion(message);
-    
+
     if (commonAnswer) {
       // It's a common question, return the pre-defined answer
-      return NextResponse.json({ 
+      return NextResponse.json({
         answer: commonAnswer,
-        source: 'common' 
+        source: 'common'
       });
     }
 
     // If not a common question, use the AI
     const aiResponse = await getAIResponse(message);
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       answer: aiResponse,
-      source: 'ai' 
+      source: 'ai'
     });
   } catch (error) {
     console.error('Error getting AI response:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
-} 
+}

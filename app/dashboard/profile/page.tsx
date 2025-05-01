@@ -3,7 +3,8 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 
 export default async function ProfilePage() {
-  const { userId } = auth();
+  // In Next.js 15, auth() returns a Promise
+  const { userId } = await auth();
   const user = await currentUser();
 
   if (!userId || !user) {

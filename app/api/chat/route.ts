@@ -5,7 +5,8 @@ import { getTransactionById } from '@/lib/transactions';
 
 // Get messages for a transaction
 export async function GET(req: Request) {
-  const { userId } = auth();
+  // In Next.js 15, auth() returns a Promise
+  const { userId } = await auth();
   if (!userId) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
@@ -44,7 +45,8 @@ export async function GET(req: Request) {
 
 // Send a message
 export async function POST(req: Request) {
-  const { userId } = auth();
+  // In Next.js 15, auth() returns a Promise
+  const { userId } = await auth();
   if (!userId) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
@@ -79,4 +81,4 @@ export async function POST(req: Request) {
     console.error('Error sending message:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
-} 
+}
