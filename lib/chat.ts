@@ -1,10 +1,8 @@
 import { db } from './db';
 import { chatMessages, transactions } from './schema';
 import { eq, desc, and, ne } from 'drizzle-orm';
-// Import Socket.io implementation based on environment
-import { getIO, getTransactionChannelName, SocketEvents } from process.env.VERCEL
-  ? './socketServerless.js'
-  : './socket.js';
+// Import Socket.io implementation
+import { getIO, getTransactionChannelName, SocketEvents } from './socketClient.js';
 import { NotificationType, createNotification } from './notifications';
 
 export interface ChatMessage {

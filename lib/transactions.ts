@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import { db } from './db';
 import { transactions, exchangeRates, users } from './schema';
 import { eq, desc, and } from 'drizzle-orm';
-import { pusher, getTransactionChannelName, PusherEvents } from './pusher';
+import { getIO, getTransactionChannelName, SocketEvents } from './socketClient.js';
 import { BlobType, generateReceipt, uploadBlob } from './blob';
 import { NotificationType, createNotification } from './notifications';
 
@@ -57,30 +57,30 @@ export async function getCurrentExchangeRate(fromCurrency: string, toCurrency: s
 // Create a new transaction
 export async function createTransaction(params: CreateTransactionParams): Promise<any> {
   const { senderId, amountSent, type, screenshot } = params;
-  
+
   try {
     // Generate unique transaction ID
     const uniqueTransactionId = nanoid(10);
-    
+
     // Calculate currencies based on type
     const fromCurrency = type === TransactionType.NAIRA_TO_RUPEES ? 'NGN' : 'INR';
     const toCurrency = type === TransactionType.NAIRA_TO_RUPEES ? 'INR' : 'NGN';
-    
+
     // Get current exchange rate
     const rate = await getCurrentExchangeRate(fromCurrency, toCurrency);
-    
+
     // Calculate amount received after fee
     const amountReceivedRaw = amountSent * rate;
     const amountReceived = type === TransactionType.NAIRA_TO_RUPEES
       ? amountReceivedRaw - TRANSACTION_FEE
       : amountReceivedRaw - (TRANSACTION_FEE / rate); // Convert fee to Naira
-    
+
     // Upload screenshot if provided
     let screenshotUrl = '';
     if (screenshot) {
       screenshotUrl = await uploadBlob(screenshot, BlobType.PAYMENT_SCREENSHOT);
     }
-    
+
     // Insert transaction into database
     const [transaction] = await db.insert(transactions).values({
       transactionId: uniqueTransactionId,
@@ -94,14 +94,14 @@ export async function createTransaction(params: CreateTransactionParams): Promis
       status: 'awaiting_payment',
       paymentScreenshotUrl: screenshotUrl,
     }).returning();
-    
+
     // If screenshot was uploaded, update transaction status
     if (screenshotUrl) {
       await updateTransactionStatus({
         transactionId: uniqueTransactionId,
         status: 'payment_received',
       });
-      
+
       // Create notification for sender
       await createNotification(senderId, {
         title: 'Payment Received',
@@ -110,7 +110,7 @@ export async function createTransaction(params: CreateTransactionParams): Promis
         relatedEntityId: uniqueTransactionId,
       });
     }
-    
+
     return transaction;
   } catch (error) {
     console.error('Error creating transaction:', error);
@@ -121,7 +121,7 @@ export async function createTransaction(params: CreateTransactionParams): Promis
 // Update transaction status
 export async function updateTransactionStatus(params: UpdateTransactionStatusParams): Promise<boolean> {
   const { transactionId, status, adminId } = params;
-  
+
   try {
     // Get transaction
     const [transaction] = await db
@@ -129,11 +129,11 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
       .from(transactions)
       .where(eq(transactions.transactionId, transactionId))
       .limit(1);
-    
+
     if (!transaction) {
       return false;
     }
-    
+
     // Update status
     await db.update(transactions)
       .set({
@@ -141,15 +141,19 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
         ...(status === 'completed' ? { completedAt: new Date() } : {}),
       })
       .where(eq(transactions.transactionId, transactionId));
-    
-    // Send real-time update via Pusher
-    const channelName = getTransactionChannelName(transactionId);
-    await pusher.trigger(channelName, PusherEvents.STATUS_UPDATE, {
-      transactionId,
-      status,
-      updatedAt: new Date(),
-    });
-    
+
+    // Send real-time update via Socket.io
+    const io = getIO();
+    const roomName = getTransactionChannelName(transactionId);
+
+    if (io) {
+      io.to(roomName).emit(SocketEvents.TRANSACTION_UPDATE, {
+        transactionId,
+        status,
+        updatedAt: new Date(),
+      });
+    }
+
     // Create notifications based on status
     if (status === 'payment_received') {
       // Notify sender
@@ -179,12 +183,12 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
         date: new Date(),
         status: 'completed',
       });
-      
+
       // Update transaction with receipt URL
       await db.update(transactions)
         .set({ receiptUrl })
         .where(eq(transactions.transactionId, transactionId));
-      
+
       // Notify sender
       await createNotification(transaction.senderId, {
         title: 'Transaction Completed',
@@ -192,7 +196,7 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
         type: NotificationType.TRANSACTION_COMPLETED,
         relatedEntityId: transactionId,
       });
-      
+
       // Notify sender about receipt
       await createNotification(transaction.senderId, {
         title: 'Receipt Ready',
@@ -200,7 +204,7 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
         type: NotificationType.RECEIPT_READY,
         relatedEntityId: transactionId,
       });
-      
+
       // Notify receiver if exists
       if (transaction.receiverId !== 'PENDING') {
         await createNotification(transaction.receiverId, {
@@ -219,7 +223,7 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
         relatedEntityId: transactionId,
       });
     }
-    
+
     return true;
   } catch (error) {
     console.error('Error updating transaction status:', error);
@@ -237,7 +241,7 @@ export async function getUserTransactions(userId: string, limit: number = 20): P
       )
       .orderBy(desc(transactions.createdAt))
       .limit(limit);
-      
+
     return userTransactions;
   } catch (error) {
     console.error('Error getting user transactions:', error);
@@ -252,7 +256,7 @@ export async function getTransactionById(transactionId: string): Promise<any> {
       .from(transactions)
       .where(eq(transactions.transactionId, transactionId))
       .limit(1);
-      
+
     return transaction;
   } catch (error) {
     console.error('Error getting transaction:', error);
@@ -266,7 +270,7 @@ export async function matchTransaction(transactionId: string, receiverId: string
     await db.update(transactions)
       .set({ receiverId })
       .where(eq(transactions.transactionId, transactionId));
-      
+
     return true;
   } catch (error) {
     console.error('Error matching transaction:', error);
@@ -282,10 +286,10 @@ export async function updateExchangeRate(fromCurrency: string, toCurrency: strin
       toCurrency,
       rate: rate.toString(),
     });
-    
+
     return true;
   } catch (error) {
     console.error('Error updating exchange rate:', error);
     return false;
   }
-} 
+}
