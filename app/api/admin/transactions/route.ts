@@ -7,7 +7,8 @@ import { and, eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 
 async function isAdmin() {
-  const cookieStore = cookies();
+  // In Next.js 15, cookies() returns a Promise
+  const cookieStore = await cookies();
   const adminAuth = cookieStore.get('admin-auth')?.value;
   return adminAuth === 'true';
 }
