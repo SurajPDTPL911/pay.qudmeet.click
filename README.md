@@ -1,7 +1,9 @@
 <<<<<<< HEAD
+![pay qudmeet click](https://github.com/user-attachments/assets/6934418e-568b-4699-b07f-d2c86615af31)
+
 # Pay.Qudmeet
 
-A secure currency exchange platform for students, facilitating transactions between Nigerian Naira and Indian Rupees.
+A secure currency exchange platform for students, facilitating transactions between Africa and Indian Rupees.
 
 ## Features
 
