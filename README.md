@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pay.Qudmeet
+
+A secure currency exchange platform for students, facilitating transactions between Nigerian Naira and Indian Rupees.
+
+## Features
+
+- 🔐 **Trusted Middleman**: Secure, transparent money transfers between Nigeria and India
+- 📈 **Real-time Exchange Rates**: Daily updated rates with complete transparency
+- 💬 **In-app Chat**: Direct communication with the other party in the transaction
+- 📱 **Status Tracking**: Full visibility into transaction progress
+- 🧠 **AI Assistant**: 24/7 support for common questions
+- 📄 **Transaction Receipts**: Downloadable proof of all transactions
+- 🔔 **Real-time Notifications**: Stay updated on all transaction activities
+
+## Technology Stack
+
+- **Frontend**: Next.js 14 with App Router
+- **Backend**: Next.js Server Actions + API Routes
+- **Database**: PostgreSQL with Drizzle ORM
+- **Authentication**: Clerk
+- **File Storage**: Vercel Blob
+- **AI Assistant**: Google Gemini AI
+- **Real-time Chat**: Socket.io
+- **Email Notifications**: Resend
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 18+ and npm
+- PostgreSQL database (or a NeonDB account)
+- Clerk account for authentication
+- Vercel account (for Blob storage)
+- No external real-time service needed (Socket.io is included)
+- Google AI API key for the AI assistant
+- Resend account for emails
+
+### Environment Setup
+
+Create a `.env` file with the following variables:
+
+```
+# Database
+DATABASE_URL=
+
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+CLERK_WEBHOOK_SECRET=
+
+# Vercel Blob Storage
+BLOB_READ_WRITE_TOKEN=
+
+# No additional configuration needed for Socket.io
+# It works out of the box with the custom server
+
+# Resend for email notifications
+RESEND_API_KEY=
+FROM_EMAIL=notifications@pay.qudmeet.click
+
+# Google Generative AI for chatbot
+GOOGLE_AI_API_KEY=
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Install dependencies
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Run database migrations
+npm run db:migrate
 
-## Learn More
+# Start development server
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+### Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run db:migrate` - Run database migrations
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Core Flows
 
-## Deploy on Vercel
+1. **User Registration**:
+   - Sign up with email/phone
+   - Complete profile with currency preferences
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. **Currency Exchange**:
+   - Initiate exchange
+   - Upload payment proof
+   - Chat with counterparty
+   - Receive confirmation
+   - Download receipt
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. **Admin Operations**:
+   - Approve/reject transactions
+   - Update exchange rates
+   - Manage users
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

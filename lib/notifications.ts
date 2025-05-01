@@ -1,6 +1,6 @@
 import { db } from './db';
 import { notifications, users } from './schema';
-import { pusher, getUserChannelName, PusherEvents } from './pusher';
+import { getIO, getUserChannelName, SocketEvents } from './socket.js';
 import { sendEmail, EmailType } from './email';
 import { eq, desc } from 'drizzle-orm';
 
@@ -21,7 +21,7 @@ interface NotificationData {
 }
 
 export async function createNotification(
-  userId: string, 
+  userId: string,
   data: NotificationData,
   sendEmailNotification: boolean = true
 ): Promise<boolean> {
@@ -35,19 +35,23 @@ export async function createNotification(
       relatedEntityId: data.relatedEntityId,
       isRead: false,
     }).returning();
-    
-    // 2. Send real-time notification via Pusher
-    const channelName = getUserChannelName(userId);
-    await pusher.trigger(channelName, PusherEvents.NOTIFICATION, {
-      notification: {
+
+    // 2. Send real-time notification via Socket.io
+    const io = getIO();
+    const roomName = getUserChannelName(userId);
+
+    if (io) {
+      io.to(roomName).emit(SocketEvents.NOTIFICATION, {
         id: notification.id,
         title: notification.title,
         message: notification.message,
         type: notification.type,
+        isRead: notification.isRead,
         createdAt: notification.createdAt,
-      }
-    });
-    
+        relatedEntityId: notification.relatedEntityId
+      });
+    }
+
     // 3. Send email notification if requested
     if (sendEmailNotification) {
       // Get user email
@@ -55,7 +59,7 @@ export async function createNotification(
         .from(users)
         .where(eq(users.clerkId, userId))
         .limit(1);
-      
+
       if (user) {
         // Map notification type to email type
         const emailTypeMap: Record<NotificationType, EmailType> = {
@@ -66,7 +70,7 @@ export async function createNotification(
           [NotificationType.TRANSACTION_FAILED]: EmailType.TRANSACTION_COMPLETED,
           [NotificationType.NEW_MESSAGE]: EmailType.TRANSACTION_COMPLETED,
         };
-        
+
         const emailType = emailTypeMap[data.type];
         // Only send email if we have a matching email type
         if (emailType) {
@@ -77,7 +81,7 @@ export async function createNotification(
         }
       }
     }
-    
+
     return true;
   } catch (error) {
     console.error('Error creating notification:', error);
@@ -90,7 +94,7 @@ export async function markNotificationAsRead(id: number): Promise<boolean> {
     await db.update(notifications)
       .set({ isRead: true })
       .where(eq(notifications.id, id));
-      
+
     return true;
   } catch (error) {
     console.error('Error marking notification as read:', error);
@@ -105,10 +109,10 @@ export async function getUserNotifications(userId: string, limit: number = 20): 
       .where(eq(notifications.userId, userId))
       .orderBy(desc(notifications.createdAt))
       .limit(limit);
-      
+
     return userNotifications;
   } catch (error) {
     console.error('Error getting user notifications:', error);
     return [];
   }
-} 
+}

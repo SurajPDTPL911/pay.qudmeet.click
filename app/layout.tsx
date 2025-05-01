@@ -1,37 +1,34 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import {ClerkProvider} from "@clerk/nextjs"
+import './globals.css';
+import { ClerkProvider } from '@clerk/nextjs';
+import { Inter } from 'next/font/google';
+import Navbar from '@/components/Navbar';
+import AIChatAssistant from '@/components/AIChatAssistant';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "Qudmeet Pay",
-  description: "Earn, Currency Exchange, Invest & Earn",
+export const metadata = {
+  title: 'Pay.Qudmeet - Secure Currency Exchange Platform',
+  description: 'Securely exchange currencies between Nigeria and India with our trusted middleman service.',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <ClerkProvider>
       <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
+        <body className={`${inter.className} min-h-screen bg-gray-50`}>
+          <Navbar />
+          <main>{children}</main>
+          <AIChatAssistant />
+        </body>
+      </html>
     </ClerkProvider>
   );
 }
