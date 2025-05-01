@@ -7,22 +7,22 @@ import { Pool } from '@neondatabase/serverless';
 // This script will create all the tables defined in the schema
 export async function runMigration() {
   console.log('Starting database migration...');
-  
+
   try {
     // Get the database URL from environment variables
     const databaseUrl = process.env.DATABASE_URL;
-    
+
     if (!databaseUrl) {
       throw new Error('DATABASE_URL environment variable is not set');
     }
-    
+
     // Create a new database connection
     const pool = new Pool({ connectionString: databaseUrl });
     const migrationDb = drizzle(pool);
-    
+
     // Run the migration
     console.log('Creating tables...');
-    
+
     // Create the status enum type first
     await pool.query(`
       DO $$
@@ -33,7 +33,7 @@ export async function runMigration() {
       END
       $$;
     `);
-    
+
     // Create users table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -51,7 +51,7 @@ export async function runMigration() {
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    
+
     // Create transactions table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS transactions (
@@ -76,7 +76,7 @@ export async function runMigration() {
         completed_at TIMESTAMP
       );
     `);
-    
+
     // Create exchange_rates table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS exchange_rates (
@@ -87,7 +87,7 @@ export async function runMigration() {
         updated_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    
+
     // Create admins table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS admins (
@@ -98,7 +98,7 @@ export async function runMigration() {
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    
+
     // Create chat_messages table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS chat_messages (
@@ -110,18 +110,19 @@ export async function runMigration() {
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    
+
     // Create group_messages table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS group_messages (
         id SERIAL PRIMARY KEY,
         sender_id VARCHAR(255) NOT NULL,
         sender_name VARCHAR(255) NOT NULL,
+        sender_avatar VARCHAR(255),
         content TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    
+
     // Create payment_accounts table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS payment_accounts (
@@ -135,7 +136,7 @@ export async function runMigration() {
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    
+
     // Create notifications table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS notifications (
@@ -149,7 +150,7 @@ export async function runMigration() {
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    
+
     // Create receipts table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS receipts (
@@ -159,33 +160,70 @@ export async function runMigration() {
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    
-    // Add foreign key constraint
+
+    // Create direct_messages table
     await pool.query(`
-      ALTER TABLE transactions 
-      ADD CONSTRAINT fk_payment_account 
-      FOREIGN KEY (payment_account_id) 
-      REFERENCES payment_accounts(id);
+      CREATE TABLE IF NOT EXISTS direct_messages (
+        id SERIAL PRIMARY KEY,
+        sender_id VARCHAR(255) NOT NULL,
+        receiver_id VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
     `);
-    
+
+    // Create conversations table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS conversations (
+        id SERIAL PRIMARY KEY,
+        participant1_id VARCHAR(255) NOT NULL,
+        participant2_id VARCHAR(255) NOT NULL,
+        last_message_at TIMESTAMP DEFAULT NOW(),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    // Add foreign key constraint if it doesn't exist
+    try {
+      await pool.query(`
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM pg_constraint WHERE conname = 'fk_payment_account'
+          ) THEN
+            ALTER TABLE transactions
+            ADD CONSTRAINT fk_payment_account
+            FOREIGN KEY (payment_account_id)
+            REFERENCES payment_accounts(id);
+          END IF;
+        END
+        $$;
+      `);
+      console.log('Foreign key constraint check completed');
+    } catch (error) {
+      console.warn('Warning: Could not add foreign key constraint. It may already exist:', error.message);
+      // Continue with migration even if this fails
+    }
+
     // Insert default admin user
     await pool.query(`
       INSERT INTO admins (username, password_hash, email)
       VALUES ('admin', '$2a$10$JdJF1JFvPYMvZjR.Mw5K5.U.Y.3XVGK2xV8q5jPMqIQJa.5DQHMG.', 'admin@pay.qudmeet.click')
       ON CONFLICT (username) DO NOTHING;
     `);
-    
+
     // Insert default exchange rates
     await pool.query(`
       INSERT INTO exchange_rates (from_currency, to_currency, rate)
-      VALUES 
+      VALUES
         ('NGN', 'INR', 0.34),
         ('INR', 'NGN', 2.94)
       ON CONFLICT DO NOTHING;
     `);
-    
+
     console.log('Migration completed successfully!');
-    
+
     return { success: true, message: 'Migration completed successfully!' };
   } catch (error) {
     console.error('Migration failed:', error);

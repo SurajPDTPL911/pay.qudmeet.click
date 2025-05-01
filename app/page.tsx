@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { SignInButton, SignUpButton, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import ExchangeRateDisplay from '@/components/ExchangeRateDisplay';
 
 export default function Home() {
   const { isSignedIn } = useUser();
@@ -70,29 +71,7 @@ export default function Home() {
               </div>
             </div>
             <div className="md:w-2/5">
-              <div className="bg-white/10 backdrop-blur p-6 rounded-lg shadow-lg border border-white/20">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="bg-green-400 text-white px-3 py-1 rounded-full text-sm font-medium">
-                    Live Rate
-                  </div>
-                  <div className="text-sm">Updated Daily at 11 AM</div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-white/10 rounded-md">
-                    <div>1 NGN</div>
-                    <div>=</div>
-                    <div className="font-bold">0.34 INR</div>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-white/10 rounded-md">
-                    <div>1 INR</div>
-                    <div>=</div>
-                    <div className="font-bold">2.94 NGN</div>
-                  </div>
-                </div>
-                <div className="mt-4 text-center text-sm">
-                  Just 50 Rs flat fee per transaction
-                </div>
-              </div>
+              <ExchangeRateDisplay />
             </div>
           </div>
         </div>

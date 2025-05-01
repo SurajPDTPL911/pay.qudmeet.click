@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -10,6 +10,26 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [error, setError] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+
+  useEffect(() => {
+    // Fetch admin email from environment variables
+    async function fetchAdminEmail() {
+      try {
+        const res = await fetch('/api/admin/env-info');
+        if (res.ok) {
+          const data = await res.json();
+          setAdminEmail(data.adminEmail);
+          // Pre-fill the email field
+          setEmail(data.adminEmail);
+        }
+      } catch (error) {
+        console.error('Error fetching admin email:', error);
+      }
+    }
+
+    fetchAdminEmail();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +80,11 @@ export default function AdminLoginPage() {
           <p className="mt-2 text-center text-sm text-gray-600">
             Enter your credentials to access the admin dashboard
           </p>
+          {adminEmail && (
+            <p className="mt-2 text-center text-sm text-blue-600">
+              Admin email: {adminEmail}
+            </p>
+          )}
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
@@ -135,6 +160,11 @@ export default function AdminLoginPage() {
           <div>
             <Link href="/admin/migrate" className="text-sm text-blue-600 hover:text-blue-800">
               Database Setup
+            </Link>
+          </div>
+          <div>
+            <Link href="/admin/create-admin" className="text-sm text-blue-600 hover:text-blue-800">
+              Create Admin User
             </Link>
           </div>
           <div>

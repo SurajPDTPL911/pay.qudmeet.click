@@ -19,6 +19,7 @@ export async function GET() {
         id: groupMessages.id,
         senderId: groupMessages.senderId,
         senderName: groupMessages.senderName,
+        senderAvatar: groupMessages.senderAvatar,
         content: groupMessages.content,
         timestamp: groupMessages.createdAt,
       })
@@ -62,6 +63,7 @@ export async function POST(req: Request) {
       .values({
         senderId: userId,
         senderName: user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.username || userId,
+        senderAvatar: user.imageUrl || null,
         content,
       })
       .returning();

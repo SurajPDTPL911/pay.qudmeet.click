@@ -23,13 +23,18 @@ export async function POST(req: Request) {
       isAuthenticated = await verifyAdmin(email, password);
     } catch (error) {
       console.error('Database authentication error:', error);
+    }
 
-      // Fallback to environment variables if database authentication fails
+    // If database authentication fails, try with environment variables
+    if (!isAuthenticated) {
       const adminEmail = process.env.ADMIN_EMAIL;
       const adminPassword = process.env.ADMIN_PASSWORD;
 
+      console.log('Trying env variables auth. Email match:', email === adminEmail);
+
       if (email === adminEmail && password === adminPassword) {
         isAuthenticated = true;
+        console.log('Environment variables authentication successful');
       }
     }
 

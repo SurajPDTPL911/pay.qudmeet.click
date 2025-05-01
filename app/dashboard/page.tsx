@@ -18,12 +18,18 @@ export default async function DashboardPage() {
             Safely exchange currencies between Nigeria and India with our trusted platform.
           </p>
         </div>
-        <div>
+        <div className="flex space-x-3">
           <Link
-            href="/chat/group"
+            href="/chat/direct"
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
           >
-            Join Group Chat
+            Messages
+          </Link>
+          <Link
+            href="/chat/group"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Group Chat
           </Link>
         </div>
       </div>

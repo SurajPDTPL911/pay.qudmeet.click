@@ -77,6 +77,7 @@ export const groupMessages = pgTable("group_messages", {
   id: serial("id").primaryKey(),
   senderId: varchar("sender_id", { length: 255 }).notNull(),
   senderName: varchar("sender_name", { length: 255 }).notNull(),
+  senderAvatar: varchar("sender_avatar", { length: 255 }),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -110,5 +111,24 @@ export const receipts = pgTable("receipts", {
   id: serial("id").primaryKey(),
   transactionId: varchar("transaction_id", { length: 50 }).notNull(),
   blobUrl: varchar("blob_url", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Direct messages table (for personal chats between users)
+export const directMessages = pgTable("direct_messages", {
+  id: serial("id").primaryKey(),
+  senderId: varchar("sender_id", { length: 255 }).notNull(),
+  receiverId: varchar("receiver_id", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Chat conversations table (to track direct message conversations)
+export const conversations = pgTable("conversations", {
+  id: serial("id").primaryKey(),
+  participant1Id: varchar("participant1_id", { length: 255 }).notNull(),
+  participant2Id: varchar("participant2_id", { length: 255 }).notNull(),
+  lastMessageAt: timestamp("last_message_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });

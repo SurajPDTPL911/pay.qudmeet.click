@@ -1,6 +1,8 @@
 // app/dashboard/profile/page.tsx
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
+import ProfileAvatar from '@/components/ProfileAvatar';
+import Link from 'next/link';
 
 export default async function ProfilePage() {
   // In Next.js 15, auth() returns a Promise
@@ -16,24 +18,28 @@ export default async function ProfilePage() {
       <h1 className="text-3xl font-bold mb-6">Your Profile</h1>
 
       <div className="bg-white shadow rounded-lg p-6 mb-6">
-        <div className="flex items-center space-x-4 mb-4">
-          {user.imageUrl ? (
-            <img
-              src={user.imageUrl}
-              alt={`${user.firstName}'s profile`}
-              className="h-16 w-16 rounded-full"
-            />
-          ) : (
-            <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
-              <span className="text-xl font-medium text-gray-600">
-                {user.firstName?.[0]}{user.lastName?.[0]}
-              </span>
-            </div>
-          )}
+        <div className="flex flex-col md:flex-row md:items-center md:space-x-6 mb-4">
+          <div className="mb-4 md:mb-0">
+            <ProfileAvatar />
+          </div>
 
           <div>
             <h2 className="text-xl font-semibold">{user.firstName} {user.lastName}</h2>
             <p className="text-gray-500">{user.emailAddresses[0]?.emailAddress}</p>
+            <div className="mt-2 flex space-x-3">
+              <Link
+                href="/chat/direct"
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                My Messages
+              </Link>
+              <Link
+                href="/chat/group"
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                Group Chat
+              </Link>
+            </div>
           </div>
         </div>
 

@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { country, currency, schoolName, phoneNumber } = body;
+    const { country, currency, schoolName, phoneNumber, profilePicture } = body;
 
     // Validate required fields
     if (!country || !currency || !phoneNumber) {
@@ -65,6 +65,7 @@ export async function POST(req: Request) {
           currency,
           schoolName: schoolName || null,
           phoneNumber,
+          profilePicture: profilePicture || existingUser.profilePicture,
         })
         .where(eq(users.clerkId, userId))
         .returning();
@@ -98,6 +99,7 @@ export async function POST(req: Request) {
           currency,
           schoolName: schoolName || null,
           phoneNumber,
+          profilePicture: profilePicture || clerkUser.image_url,
         })
         .returning();
 
