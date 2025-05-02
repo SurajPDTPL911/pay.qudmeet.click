@@ -13,9 +13,8 @@ async function isAdmin() {
 
 export async function PATCH(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const { params } = context;
 
   try {
     // Check if user is admin
@@ -65,9 +64,8 @@ export async function PATCH(
 
 export async function GET(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const { params } = context;
 
   try {
     // Check if user is admin
