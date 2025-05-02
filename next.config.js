@@ -10,6 +10,9 @@ const nextConfig = {
   experimental: {
     // Note: esmExternals is not recommended but needed for compatibility
     // with certain packages
+    serverComponentsExternalPackages: ['bcryptjs'],
+    // Enable App Router parameters type
+    typedRoutes: true,
   },
   // Webpack configuration to handle Socket.io
   webpack: (config, { isServer }) => {
